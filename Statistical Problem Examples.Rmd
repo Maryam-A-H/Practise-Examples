@@ -1,0 +1,288 @@
+---
+title: "Practise 2"
+author: "Maryam Ahmed "
+date: "2024-10-06"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+</br>
+</br>
+Ensure you justify all computation and data visualizations with accompanying code.
+</br>
+</br>
+```{r}
+library(ggplot2)
+library(mosaic)
+```
+
+**1.**  Billy purchases one 6-49 lottery ticket every week and keeps track of the number of "matches"" he has on each of his tickets. To be clear, a "match" will occur when a number on his ticket matches a number that appears in the winning combination. A random variable $X$ that keeps track of the number of matching numbers Billy experiences per week has the probability distribution function with a mean and standard deviation of
+
+$$
+P(X = x) = \frac{{6 \choose x}{43 \choose 6 - x}}{{49 \choose 6}} \hspace{0.5in} x = 0, 1, 2, 3, 4, 5, 6. \\
+E(X) = \mu_{X} = \frac{36}{49} = 0.7347 \\
+SD(X) = \sigma_{X} = 0.75998 \approx 0.76
+$$
+Billy claims that in a year (52 weeks), on average, he manages to have at least one matching number on his 6-49 ticket. What do you think about Billy's claim? Provide a brief commentary about Billy's claim using your current knowledge of statistics and probability theory. 
+
+**Answer **
+I think Billy claim isn't right. From what we know from statistics the expect number of matches per week is 0.7347. In 52 weeks, he could expect that he would get 52*0.7347 = 38.2044 = 38 matches in that time frame of a year. Which as you can see he would have not won every week, but expected to have 38 times in the year. Hence i would say that no, Billy claim is not correct to have one at least one match per week.
+
+
+**2.** A common measure of toxicity for any pollutant is the concentration of the pollutant that will kill half of the test species in a given amount of time (usually about 96 hours for the fish species). This measurement is called the LC50, which refers to the lethal concentration killing 50% of the test species). 
+</br>
+</br>
+The Environmental Protection Agency has collected data on LC50 measurements for certain chemicals likely to be found in freshwater and lakes. For a certain species of fish, the LC50 measurements (in parts per million) for DDT in 12 experiments to determine the LC50 "dose" are
+$$
+16, 5, 21, 19, 10, 5, 8, 2, 7, 2, 4, 9 
+$$
+
+(a) Use R studio to create the bootstrap distribution of the sample mean $\overline{X}_{Boot, LC50}$. Use 2000 "bootstraps" in your work, and display the distribution.  
+
+
+```{r}
+nsims = 2000
+meanval= numeric(nsims)
+orginaldata = c(16, 5, 21, 19, 10, 5, 8, 2, 7, 2, 4, 9)
+
+for (i in 1:nsims){
+  meanval[i] = mean(sample(orginaldata, 12, replace = TRUE))
+}
+
+data = data.frame(meanval)
+
+ggplot(data = data, aes(x=meanval)) + geom_histogram(col='black', fill='blue', binwidth=0.025) + labs (title = "Histogram of Mean Values",
+    x = "Mean Value",
+    y = "Frequency"
+  )
+
+```
+
+(b) From your result in (a), compute the 95% bootstrap (percentile) confidence interval for $\mu_{LC50}$, the mean LC50 measurement for DDT.
+
+```{r}
+qdata(~meanval, c(0.025, 0.975), data = data)
+```
+**Answer **
+
+This indicates that mean is: 5.91667 < mu < 12.5833 
+
+(c) Repeat your estimation of $\mu_{LC50}$, using the "other" confidence interval covered in Data 602. In the **context of these data**, interpret the meaning of the confidence interval. State any conditions/assumptions that are required in the computation of this confidence interval. 
+
+** Assumptions ** 
+I have assumed that the distribution is normal and that since the number of sample sizes are small, i will be using a t test to create the confidence interval 
+
+```{r}
+
+data = c(16, 5, 21, 19, 10, 5, 8, 2, 7, 2, 4, 9)
+data = as.data.frame(data)
+t.test(~ data, conf.level=0.95, data=data)$conf
+```
+
+**Answer **
+This indicates that the mean is: 4.918 < mu < 13.08186
+
+
+(d) Compare your results in parts (b) and (c). If you were to report one of these confidence intervals, which would you report? Explain your answer. 
+**Answer **
+It looks like b has a smaller range than c in terms of where the mean will be. If i where to report the confidence interval, i would choose the smaller range. This is because the narrower the range is the more it provides a precise estimate of the mean. This is even more important since we are dealing with this kind of data. The narrower interval suggests that the sample mean is more closely clustered around the true population mean, reducing the uncertainty on where the mean actually is. In which although its not 100% for certain, we can say the we are 95% confident with the narrower range.
+
+**3.** Does one's educational level influence their opinion about vaccinations? A recent Angus Reid[^2]
+survey was taken. Each person sampled was asked to respond to the statement "The science around vaccinations isn't clear."
+</br>
+</br>
+Respondents either "strongly agree", "moderately agree", "moderately disagree", or "strongly disagree". The sample was partitioned by level of education. 
+
+There were $n = 670$ respondents who's highest level of education was high school or less, of which 348 "disagreed" (moderately disagree or stongly disagree). There were also $n = 376$ who's highest level of education was at least an undergraduate university education. Of these, 274 disagreed.
+</br>
+</br>
+
+(a) Consider the population consisting of all persons, who's highest level of education was high school or less and the bootstrap statistic $\widehat{p}_{Boot, HS}$. USing 1000 iterations/replications, create a bootstrap distribution of $\widehat{p}_{HS}$. Display your distribution. 
+
+```{r}
+set.seed(1)
+nsim = 1000
+high = rep(c(0,1), c(670-348, 348))
+uni = rep(c(0,1), c(376-274, 274))
+nhigh = 670
+nuni = 376
+
+probhigh = numeric(nsim)
+
+for (i in 1:nsim){
+  probhigh[i] = sum(sample(high, replace=TRUE))/nhigh}
+
+hist(probhigh, col = "lightgreen", 
+     main = "Sampling Distribution of Sample Proportions",
+     xlab = "Sample Proportion", ylab = "Frequency")
+abline(v =  348/670, col = "Black", lwd = 1.5)
+```
+
+
+(b) Now consider a *different* population that consists of all persons who's highest level of education was at least an undergraduate degree. Repeat part (a), creating a bootstrap distribution for $\widehat{p}_{Boot, Uni}$. (Again, display your distribution).
+```{r}
+set.seed(1)
+nsim = 1000
+high = rep(c(0,1), c(670-348, 348))
+uni = rep(c(0,1), c(376-274, 274))
+nhigh = 670
+nuni = 376
+probuni = numeric(nsim)
+
+for (i in 1:nsim){
+  probuni[i] = sum(sample(uni, replace=TRUE))/nuni}
+
+hist(probuni, col = "lightgreen", 
+     main = "Sampling Distribution of Sample Proportions",
+     xlab = "Sample Proportion", ylab = "Frequency")
+abline(v =  274/376, col = "Black", lwd = 1.5)
+```
+
+
+(c) You wish to estimate $p_{Uni} - p_{HS}$, the difference between the proportion of all university-educated Canadians who disagree that the science of vaccinations isn't clear and the proportion of all Canadians who's highest level of completed education is high school who believe the same.  You wish to have 95% confidence in your result.  Think about the code you created to generate the bootstrap distributions on parts (a) and (b). Modify the code to you created in parts (a) and (b) to create a distribution of the bootstrap statistic $\widehat{p}_{Uni} - \widehat{p}_{HS}$. 
+
+
+```{r}
+set.seed(1)
+probuni = numeric(nsim)
+probhigh = numeric(nsim)
+probdiff = numeric(nsim)
+
+for (i in 1:nsim){
+  probuni[i] = sum(sample(uni, replace=TRUE))/nuni
+  probhigh[i] = sum(sample(high, replace=TRUE))/nhigh
+  probdiff[i] = probuni[i]-probhigh[i] }
+  
+hist(probdiff, col = "lightgreen", 
+     main = "Sampling Distribution of Sample Proportions",
+     xlab = "Sample Proportion", ylab = "Frequency")
+```
+(d) Consider your finding in part (c). Compute the 95% bootstrap percentile confidence interval for $p_{Uni} - p_{Hs}$. From your result, does the proportion of persons with at most a high school education who disagree the science around vaccinations isn't clear greater than the similar proportion of persons with at least an undergraduate university degree? Write a paragraph that supports your answer.  
+
+```{r}
+
+qdata(probdiff, c(0.025,0.975), data = probdiff)
+
+```
+**Answer **
+Based on the interval, we can say that the probability of Canadians with the highest level of education being university that disagree is about 15.24% to 26.41% higher than Canadians with the highest level of education being high school that disagree.So to answer the question no, the Canadians with at most high school degrees don't disagree more than the the Canadians with at most university degrees as the difference between the two show otherwise.
+
+[^2]:http://angusreid.org/wp-content/uploads/2015/02/2015.02.13-Vaccinations.pdf
+
+**4.** Nanos research[^3] recently completed a survey of $n = 1000$ Canadians aged 18 years of age or older, asking each "what is your most important national issue of concern?" 163 responded "Inflation", 149 responded "Environment", 131 responded "Jobs/Economy". Those were the Top Three. 
+
+(a) Compute a 95% confidence interval for $p_{Inflation}$, the proportion of all Canadians aged 18 years or older for whom "Inflation" is the most important national concern. 
+```{r}
+n = 1000
+p = 163/1000
+xbar = 1000*(163/1000)
+s = sqrt((p*(1-p))/n)
+
+# Wald Interval 
+
+Upper = p + 1.96*s 
+Lower = p - 1.96*s 
+Upper
+Lower
+```
+**Answer **
+
+The 95% confidence interval for the proportion of all Canadians that believe that the most important national issue is inflation is between, 0.1401 and 0.1859
+
+
+(b) Similar to your work in Question 4(b), create the distribution of the bootstrap statistic $\widehat{p}_{Boot, Inflation}$ and a 95% bootstrap percentile confidence interval for $p_{Inflation}$. 
+```{r}
+set.seed(1)
+nsims = 10000
+n = 1000
+Inflation = rep(c(0,1), c(1000-163, 163))
+pInflation = numeric(nsims)
+
+for (i in 1:nsims){
+  pInflation[i] = sum(sample(Inflation,n, replace = TRUE))/n
+}
+
+hist(pInflation, col = "lightgreen", 
+     main = "Sampling Distribution of Sample Proportions - Inflation",
+     xlab = "Sample Proportion of Inflation", ylab = "Frequency")
+
+
+qdata(pInflation, c(0.025,0.975), data =pInflation )
+```
+**Answer **
+The 95% confidence interval from the bootstrap is the proportion of all Canadians that believe that the most important national issue is inflation is between, 0.140 and 0.186
+
+
+(c) A similar survey of Canadians in August 2023 - a little over a month ago - suggested that the proportion of all Canadians who identified "Inflation" as the most important national concern was $p_{Inflation, Aug\_23} = 0.13$. 
+</br>
+</br>
+From your results in (a) and (b), can you infer that the proportion of all Canadians who believe "Inflation" is the most important national issue has *increased* since August of this year? Why or why not? Ensure you invoke a statistical justification. 
+
+[^3]:https://nanos.co/wp-content/uploads/2023/09/Political-Package-2023-09-08-FR-With-Tabulations.pdf
+</br>
+</br>
+
+**Answer **
+
+Yes, the proportion of Canadians who believe inflation is the most important national issue has likely increased since August 2023. The confidence interval from the recent survey is between 14.0% to 18.6% which exceeds the August probability of 13%. This indicates that the recent survey results reflect a higher level of concern regarding inflation among Canadians. Therefore, we can conclude that there is strong evidence to suggest an increase in the prioritization of inflation as a national issue since August 2023.
+
+
+**5.** A national survey [^4] of $n = 399$ "Gen Z"-ers - someone who is born in the years 1996 - 2010 (inclusive) was taken. Each was then asked the following question:
+<center>
+"If a federal election were held tomorrow, which one of the following parties would you vote for in your constituency? "
+</center>
+
+The results? 
+
+- 128 responded "Conservative" (Conservative Party of Canada)
+- 96 responded "Liberal" (Liberal Party of Canada)
+- 104 responded "NDP" (New Democratic Party of Canada)
+
+Respondents were provided with a few more "closed options", including the Bloc Quebecois, People's Party, and Green Party. 
+
+(a) Compute the 95% confidence interval for $p_{Con}$, the proportion of all Gen Z-ers in Canada that will vote for their respective Conservative Member of Parliament candidate/constituency, in an election were "held tomorrow". 
+
+
+```{r}
+prop.test(128, 399)
+
+```
+**Answer **
+The 95 % confidence interval of Gen Z-ers that would vote for the conservative party is between 27.57% and 36.94%. 
+
+
+(b) Consider the bootstrap statistic $\widetilde{p}_{Con} = \frac{X_{Con} + 2}{399 + 4}$. Write the R code that will generate a bootstrap distribution for $\widetilde{p}_{Con}$. Use 1000 as the number of replications/iterations.
+
+```{r}
+set.seed(1)
+nsims = 1000
+n = 399
+conservative = rep(c(0,1), c(399-128, 128))
+pcon = numeric(nsims)
+
+for (i in 1:nsims){
+  pcon[i] = (sum(sample(conservative,n, replace = TRUE))+2)/(n+4)
+}
+
+hist(pcon, col = "lightgreen", 
+     main = "Sampling Distribution of Sample Proportions",
+     xlab = "Sample Proportion", ylab = "Frequency")
+```
+
+(c) From your result in part (b), compute a 95% bootstrap confidence interval for $p_{Con}$. 
+```{r}
+
+qdata(pcon, c(0.025,0.975), data = pcon)
+
+```
+**Answer **
+The 95 % confidence interval of Gen Z-ers that would vote for the conservative party is between 27.79% and 36.98%. 
+
+(d) Consider your results in parts (a) and (c). Compare the two results. If you had to pick one as the "best" estimate for the unknown value of $p_{Con}$, which one would you select? Provide a justification for your choice. 
+
+**Answer **
+I would choose the second (c) estimator (27.79% to 36.98%) as the "best" estimate for the $p_{Con}$ This is because the first confidence interval is narrower than the second (27.57% to 36.94%), indicating a more precise estimate of the true proportion of Gen Z-ers who would vote for the Conservative Party. A narrower interval suggests reduced uncertainty and provides a tighter range around the estimated value, which is generally preferable. Given that both intervals are at the same confidence level (95%), the first interval’s smaller range makes it the better choice, as it reflects less variability and more precision in estimating. 
+
+[^4]: https://abacusdata.ca/genz-top-issues-facing-canada/
