@@ -1,0 +1,339 @@
+---
+title: "Practise 2"
+author: "Maryam Ahmed "
+date: "2024-10-11"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+</br>
+</br>
+Ensure you justify all computation and data visualizations with accompanying code. 
+</br>
+</br>
+
+**1.** The data set **NCBirths2004** consists of the Weight (in grams) of $n = 1009$ babies born in the state of North Carolina in 2004. All babies appearing in this sample had a gesteration periods of at least 37 weeks and were single births. Other variables in this data set include the Age of the birth mother, whether or not the birth mother was a Smoker during the gestation period, used Alcohol during the gestation period, the Gender of the baby. To access these data, install the `resampledata` package. For example, 
+
+```{r include=FALSE}
+install.packages('plyr', repos = "http://cran.us.r-project.org")
+install.packages("mosaic", repos = "https://cran.rstudio.com/")
+```
+
+```{r}
+install.packages("resampledata", repos = "http://cran.us.r-project.org")
+library(resampledata)
+library(mosaic)
+```
+
+**Note:** This package has been installed in the R Studio "cloud" through the Data Science Hub. You will not be able to "install" this package on your version of R Studio through the datasciencehub.ucalgary.ca, as the packages you see in the "packages" pane are fixed for the moment. 
+
+
+```{r}
+
+head(NCBirths2004, 4)
+
+```
+
+The feature/variable **Weight** represents the birth weight, in grams. 
+</br>
+</br>
+Let $\mu_{NonSmoker}$ be the mean birth weight of all babies born in North Carolina in 2004 to birth mothers who did not smoke during pregnancy, and $\mu_{Smoker}$ be the mean birth weight of all babies born in North Carolina in 2004 to birth mothers who did smoke during pregnancy. 
+
+(a) Create the bootstrap distribution for $\overline{X}_{NonSmoker} - \overline{X}_{Smoker}$. 
+
+```{r}
+
+set.seed(1)
+nsims = 10000
+Smokerval = numeric(nsims)
+NonSmokerval = numeric(nsims)
+meanval= numeric(nsims)
+Smokers = NCBirths2004$Weight[NCBirths2004$Smoker == "Yes"]
+NonSmoker =  NCBirths2004$Weight[NCBirths2004$Smoker == "No"]
+
+for (i in 1:nsims){
+  Smokerval[i] = mean(sample(Smokers,replace = TRUE))
+  NonSmokerval[i] = mean(sample(NonSmoker,replace = TRUE))
+  meanval[i] = NonSmokerval[i] - Smokerval[i]
+}
+hist(meanval, col = "purple", 
+     main = "Sampling Distribution of Diffrence in Mean",
+     xlab = "Sample Mean", ylab = "Frequency")
+abline(v =  348/670, col = "Black", lwd = 1.5)
+
+```
+
+(b) From your result in (a), compute the 95% confidence interval for $\mu_{NonSmoker} - \mu_{Smoker}$. 
+
+```{r}
+data = data.frame(meanval)
+qdata(~meanval, c(0.025, 0.975), data = data)
+```
+**Answer** [111.8, 316.5]
+(c) Compute the 95% confidence interval for $\mu_{NonSmoker} - \mu_{Smoker}$, using the $t$-version. 
+```{r}
+t.test(NonSmoker, Smokers, var.equal = FALSE, conf.level=0.95)$conf 
+```
+**Answer** [112.3, 317.7]
+(d) Consider your result in both (b) and (c). What can you infer from these data? Do children born to birth mother who did not smoke during pregnancy weigh more on average than babies born to birth mothers who did smoke during pregnancy? 
+
+**Answer**
+Looking at the data, we can infer that we are 95% confident that the difference in mean of non-smoker baby weight is on average between ~112 to ~317 grams heaver than smoker baby weight of all babies born in the state of North Carolina in 2004. So yes, babies who's mother did not smoke, often weigh more.
+
+**2.** Refer to Question 1. 
+
+(a) Create a distribution of the bootstrap statistic $\frac{S_{Smoker}}{S_{NonSmoker}}$. Use 1000 as the number of iterations/replications and provide a visualization of this distribution. 
+
+```{r}
+
+set.seed(1)
+nsims = 1000
+Smokerval = numeric(nsims)
+NonSmokerval = numeric(nsims)
+StandardDevVal= numeric(nsims)
+Smokers = NCBirths2004$Weight[NCBirths2004$Smoker == "Yes"]
+NonSmoker =  NCBirths2004$Weight[NCBirths2004$Smoker == "No"]
+
+for (i in 1:nsims){
+  Smokerval[i] = sd(sample(Smokers,replace = TRUE))
+  NonSmokerval[i] = sd(sample(NonSmoker,replace = TRUE))
+  StandardDevVal[i] =  Smokerval[i]/NonSmokerval[i]
+}
+
+hist(StandardDevVal, col = "yellow", 
+     main = "Sampling Distribution of Standard Deviation of Smokers/ Standard Deviation of NonSmokers",
+     xlab = "Standard Deviation", ylab = "Frequency")
+
+```
+
+(b) Create a Normal Probablity Plot of this bootstrap statistic. Does the ratio of the sample standard deviations appear to follow a Normal distribution? Explain.
+```{r}
+
+qqnorm(StandardDevVal, main = "Normal Probability Plot of [S_smoker / S_nonsmoker]")
+qqline(StandardDevVal, col = "red")
+```
+
+**Answer** 
+
+The plot will compare the distribution of the bootstrap statistic to a theoretical normal distribution. If the points in the plot fall approximately along the red line, the distribution of the statistic is roughly normal. So yes, looking at the data plotted, you can see the data follows a normal distribution.
+
+(c) Compute the 95% bootstrap percentile interval for $\frac{\sigma_{Smoker}}{\sigma_{NonSmoker}}$.
+
+```{r}
+qdata(~StandardDevVal, c(0.025, 0.975))
+```
+**Answer** [0.93, 1.3]
+
+(d) Consider the result you obtained in part (c). Explain the practical meaning of this result with respect to the variable **Weight**. 
+
+**Answer** 
+
+Since the interval includes values both above and below 1, we can conclude that the standard deviation of birth weights for babies of mothers who smoked during pregnancy could be slightly higher or lower than that for non-smokers. Also, because the interval includes 1 and is very close to it, we can conclude that there is no significant difference in the standard deviations between the two groups.
+
+**3.**  Health Canada sets an action level for mercury in fish at 1 ppm (part per million). If mercury levels are higher than this value, then this value in commercial fish then Health Canada will take action to impose a moritorium on fishing in the area where the fish are harvested. 
+
+Recently, there have been concerns about mercury levels in walleye fish populating the portion of the Athabasca River that is down stream from Whitecourt, where local First Nations harvest walleye as part of a commercial fishing operation. 
+
+A biologist randomly picked $n = 31$ walleye from a recent commercial fishing catch downstream from Whitecourt, and measured the mercury (in ppm) from each walleye. The ppms, are provided below.
+$$
+1.2, 1.1, 1.0, 1.0, 1.1, 1.0, 1.0, 1.0, 0.9, 1.1, 1.1, 1.2, 1.0, 1.1, 1.0 \\
+1.1, 1.0, 0.9, 1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.2, 1.0, 1.1, 1.0, 1.0, 1.2, 1.1
+$$
+
+(a) Establish a statistical hypothesis that allows the biologist to see if mercury levels in walleye fish harvested from the Athabasca River (downstream of Whitecourt) exceed Heath Canada's action level. 
+```{r}
+values = c(1.2, 1.1, 1.0, 1.0, 1.1, 1.0, 1.0, 1.0, 0.9, 1.1, 1.1, 1.2, 1.0, 1.1, 1.0,1.1, 1.0, 0.9,1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.2, 1.0, 1.1, 1.0, 1.0, 1.2, 1.1)
+n = length(values)
+```
+ho = u = 1 ppm 
+ha = u > 1 ppm
+
+(b) Refer to your hypotheses in (a). In the context of your statistical hypotheses in part (a), explain *both* a Type I Error and a Type II Error.
+
+**Answer**
+
+A type 1 error would occur if we reject the null in favor of the alternative, when the null is true. In which we say that the mercury levels are greater than 1, but they are actually not.
+
+A type 2 error would occur when we fail to reject the null, when in fact the null is false. In which we say that the mercury levels not greater than 1, but they are actually are.
+
+
+(c) Visualize these data with either a violin plot or a boxplot, and comment on the disribution of mercury levels on walleye harvested from the Athabaska River downstream from Whitecourt.
+
+```{r}
+values = as.data.frame(values)
+
+ggplot(data=values, aes(x = "var", y = values)) + geom_boxplot(col='red', fill='blue') + xlab("") + ylab("Output") + scale_x_discrete(breaks=NULL) + coord_flip() + ggtitle("Boxplot of Walleye fish harvested from the Athabaska River")
+```
+**Answer** 
+Looking at the box plot, we can conclude that the sample is not normally distributed as the mean of ppms is at 1. A normal distributed box plot would have the mean line right in the middle of the box.
+
+
+(d) Do these data suggest that Health Canada should place a moritorium on commercial walleye fishing on the Athabaska River downstream of Whitecourt? In your finding, interpret the meaning of the $P$-value you have computed. *IF* you reject the null hypothesis, provide a 95% confidence interval for the mean mercury (in ppm) of walleye found downstream from Whitecourt. 
+
+```{r}
+
+t.test(~values, mu = 1, alternative = "greater", data = values)
+
+```
+**Answer**
+We can conclude with a 95% confidence, since the p-value of 0.00065955 is less than 0.05 (alhpa) that we
+reject the null in favor of the alternative, therefore the average ppm of the walleye fish is greater than 1.
+
+Since i rejected the null in favor of the alternative, the CI is...
+```{r}
+
+t.test(~values, mu = 1, alternative = "two.sided", data = values)$conf
+
+```
+**Answer**[1.0, 1.1]
+
+
+**4.** Coffee markets that conform to organic standards focus on the environmental aspect of coffee growing, such as the use of shade trees, and reduced reliance on herbicides and pesticides. Researchers investigating organic coffee growers in Southern Mexico took a representative, random sample of $n = 845$ coffee growers, of which 475 were certified to sell organic coffee and 75 were transitioning to sell organic coffee. 
+</br>
+</br>
+
+*In the United States*, 60% of all coffee growers are organically certified. Is there ample statistical evidence to confirm that the proportion of certified coffee growers in Southern Mexico who are either certified or in the process of being certified, is more than 60%? 
+Ensure you completely justify your answer, using method(s) covered in DATA 602. 
+</br>
+</br>
+
+```{r}
+n = 845
+phat = (475+75)/845
+po = 0.60 
+```
+ho: porganic = 0.60 
+ha: porganic > 0.60 
+
+```{r}
+num = phat - po
+denom = (po*(1-po))/845
+z = num/sqrt(denom)
+
+pvalue = 1 - pnorm(z)
+pvalue 
+
+```
+```{r}
+#  Confirming another way
+binom.test(475+75,845,0.60, alternative = "greater")
+```
+**Answer**
+Given that our alpha is 0.05 and are p-value is 0.001, we can say that we are 95% confident that we can reject the null in favor of the alternative in which certified coffee growers in south Mexico who are certified or in the process of being certified is more than 60%!
+
+
+**5.** As a budding data scientist with much promise, a person who is considering running as a Member of Parliament (MP) for a certain riding hires you to conduct some polling. Due to the time investment and the cost (time and finances) of a political campaign, you decide to take a random sample of $n = 50$ voters who live within this particular riding. Each are to be asked "if they would support this particular candidate if they ran as a reprsentative for Party X in the next federal election".  If your polling/sampling suggests that they will receive at least 45% of the vote, then you will council this person to "run for office". In your preliminary statistical work, you have decided that there is enough statistical evidence to support the "mimimum of 45%"-claim if out of $n = 50$ randomly chosen voters, at least 20 indicate they will vote for this candidate if they run. 
+
+(a) State the statistical hypotheses.
+
+**Answer**
+pol <= 45%
+pol > 45%
+
+(b) Compute the value of $\alpha$ used in your derivation of the decision rule. 
+
+**Answer** 
+
+```{r}
+
+1 - pbinom(19,50,0.44)
+
+```
+
+(c) What if the candidate were to receive 42% of the vote. Compute the probability that you will conclude they should run for office. Interpret the meaning of this probability.
+
+```{r}
+1 - pbinom(19,50,0.42) 
+```
+**Answer** 
+Given that the candidate was to receive 42% of the votes, the probability of at least 20 people supporting and that that they would actually run in 66%. This represents the Type I error where we incorrectly rejecting the null hypothesis (saying that the candidate should run) when it's actually the true proportion is less than or equal to 0.45.
+
+(d) Repeat for (c) for these values of $p$: $p = 0.41, p = 0.40, p = 0.39, p = 0.38, p = 0.35$ and $p = 0.30$. For each differing value of $p$, compute the probability computed in part (c). THEN, create a plot with the differing values of $p$ on the $x$-axis and the probabilties computed on the $y$-axis. 
+
+```{r}
+
+p <- c(0.45, 0.42, 0.41, 0.40, 0.39, 0.38, 0.35, 0.30)  
+
+prob <- function(p) {
+  return(1 - pbinom(19, 50, p))}
+
+
+Allprob<- sapply(p, prob)
+
+# Create data frame for plotting
+data <- data.frame(
+  p = p,
+  Probability = Allprob
+)
+
+
+ggplot(data, aes(x = p, y = Probability)) +
+  geom_line(color = "blue") +
+  geom_point(color = "blue") +
+  labs(
+    title = "Probability of Should Run for Office vs. True Proportion of Votes",
+    x = "True Proportion of Votes (p)",
+    y = "Probability of Concluding to Run for Office"
+  ) + 
+  theme_minimal()
+
+```
+
+
+(e) What does your plot/graph in part (d) tell you about your statistical test? How can you improve your test? Provide some suggestion(s), reasoning why each would make your statisical test better. 
+
+**Answer**
+
+The plots indicate that as the polling percentage increases, the probability of the candidate deciding to run also increases. It also shows the probability of a false positive (type 1 error) decreases as the true proportion gets further away from the threshold which is 0.45. There is also a noticeable steep incline in the graph, suggesting that higher polling values reflect to a greater probability of running for office. 
+
+To enhance the statistical analysis, increasing the sample size would be beneficial, as it would provide a better understanding of the proportions and improve the reliability of the model.
+
+
+**6.** In 2012, an Angus Reid[^2] poll surveyed $n = 1010$ randomly chosen Canadians from which 601 supported a ban on singe-use plastics. A more recent survey in 2019 of $n= 1000$ Canadians[^3] found that 561 supported a ban on single-use plastics. 
+
+(a) Compute *a* 95% confidence interval for $p_{2019} - p_{2012}$, the difference between the proportion of Canadians who currently support a ban on single-use plastics and the proportion of Canadians who supported such a ban in 2012.
+```{r}
+
+prop.test(c(561,601), c(1000,1010), alternative="two.sided", correct=FALSE)
+```
+**Answer** CI = [-0.1, 0.0]
+
+(b) From your result in (a), can you infer there is a statistically significant difference between $p_{2019}$ and $p_{2012}$. Why or why not?
+
+**Answer** 
+
+Ho = 2019 = 2012
+Ha = 2019 != 2012
+
+With a p-value greater than 0.05, we fail to reject the null hypothesis at alpha = 0.05. There is insufficient evidence to conclude a difference in support for single-use plastic bans between 2012 and 2019. Also with the confidence interval, it passes 0.
+
+[^2]: https://nationalpost.com/news/more-than-half-of-canadians-think-banning-sale-of-plastic-bags-a-good-idea-poll
+
+[^3]:https://www.theglobeandmail.com/politics/article-majority-of-canadians-support-a-ban-on-single-use-plastics-poll/
+
+
+**7.** Usman wonders how much cereal really appears in a box of his favourite cereal, [Smores](https://www.google.com/search?q=smores+cereal&client=firefox-b-d&tbm=isch&source=iu&ictx=1&fir=H2NWnFX_YoV_hM%253A%252C1elcm_iyIJdQVM%252C_&vet=1&usg=AI4_-kS0SAe8BMVvAu-_K1jBgAYWt_aiYA&sa=X&ved=2ahUKEwixmr3Ut-XkAhVBvZ4KHbxlDmgQ_h0wDXoECA4QBA&biw=1920&bih=966#imgrc=H2NWnFX_YoV_hM:&vet=1). He randomly picks one box from each of eight different supermarkets/grocery stores, purchases the desired cereal, then weights the contents of each box. The content weight states on each box is 500 grams. **Is Usman getting the amount of cereal as stated on the box?**
+</br>
+</br>
+The amount of cereal in each box, in grams, is provided below.
+$$
+497.2, 499.9,495.8, 514.2, 490.0, 498.3, 495.1, 486.7
+$$
+
+What do these data suggest? Ensure you address any conditions/assumptions you have made about these data. Also ensure you provide the $P$-value and interpret its meaning in the context of these data. 
+
+**Answer**
+
+Ho = mean = 500 
+Ha = mean != 500 
+```{r}
+values = c(497.2, 499.9,495.8, 514.2, 490.0, 498.3, 495.1, 486.7) 
+
+t.test(~values, mu = 500, alternative = "two.sided")
+
+```
+
+**Answer Explained**
+Since the p-value (0.356) is greater than the significance level (0.05), we do not have enough statistical evidence to reject the null hypothesis. This means we cannot conclude that the average amount of cereal in the boxes is significantly different from 500. However, this could also be due to small sample size. If he tried more boxes, he may conclude differently. 
