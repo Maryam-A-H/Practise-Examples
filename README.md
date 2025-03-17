@@ -1,1 +1,1 @@
-Hi! These are some practise examples to work through as as beginner. Helped me understand the basline ideas of how to sucessfully code, use SQL in python, and catch up on basic statistcial distibutions and theories.
+Hi! These are some practise examples to work through as as beginner. Helped me understand the basic ideas of how to sucessfully code, use SQL in python, and catch up on basic statistcial distibutions and theories.
